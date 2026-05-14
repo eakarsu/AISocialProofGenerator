@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const authMiddleware = require('../middleware/auth');
+const { aiRateLimiter } = require('../middleware/rateLimiter');
+const pool = require('../config/database');
 
 // ─── Centralized OpenRouter caller with robust JSON extraction ───────────────
 
@@ -9,7 +11,7 @@ const callOpenRouter = async (prompt, systemPrompt = '') => {
   const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
   const OPENROUTER_API_URL = `${OPENROUTER_BASE_URL}/chat/completions`;
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-  const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5';
+  const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
 
   if (!OPENROUTER_API_KEY) {
     throw new Error('OpenRouter API key is not configured. Please set OPENROUTER_API_KEY in .env file.');
@@ -93,17 +95,40 @@ const callOpenRouter = async (prompt, systemPrompt = '') => {
 
 // Helper: safely parse JSON from AI response
 const safeParseJSON = (text, fallbackFields = {}) => {
+  if (!text) return null;
   try {
     return JSON.parse(text);
   } catch (e) {
+    // Strip markdown fences
+    let cleaned = text.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '').trim();
+    // Find first { to last }
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start !== -1 && end !== -1 && end > start) {
+      try { return JSON.parse(cleaned.slice(start, end + 1)); } catch {}
+    }
+    // Return null on failure instead of silently falling back to raw text
     console.error('JSON parse failed. Raw text:', text.substring(0, 300));
-    return fallbackFields;
+    return null;
   }
 };
 
+// Persist AI result to DB
+async function persistAIResult(userId, endpoint, inputData, result) {
+  try {
+    await pool.query(
+      'CREATE TABLE IF NOT EXISTS ai_results (id SERIAL PRIMARY KEY, user_id INTEGER, endpoint VARCHAR(100), input_data JSONB, result JSONB, created_at TIMESTAMP DEFAULT NOW())'
+    );
+    await pool.query(
+      'INSERT INTO ai_results (user_id, endpoint, input_data, result) VALUES ($1, $2, $3, $4)',
+      [userId, endpoint, JSON.stringify(inputData), JSON.stringify(result)]
+    );
+  } catch (e) { console.error('persistAIResult:', e.message); }
+}
+
 // ─── Generate enhanced testimonial ───────────────────────────────────────────
 
-router.post('/generate-testimonial', authMiddleware, async (req, res) => {
+router.post('/generate-testimonial', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { original_text, customer_name, company, role } = req.body;
 
@@ -192,7 +217,7 @@ Return this exact JSON structure:
 
 // ─── Generate case study ─────────────────────────────────────────────────────
 
-router.post('/generate-case-study', authMiddleware, async (req, res) => {
+router.post('/generate-case-study', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { company, industry, challenge, solution, results } = req.body;
     const hasData = company || challenge || solution;
@@ -299,7 +324,7 @@ Return this exact JSON structure:
 
 // ─── Summarize reviews / Generate review ─────────────────────────────────────
 
-router.post('/summarize-reviews', authMiddleware, async (req, res) => {
+router.post('/summarize-reviews', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { reviews, original_review, source, customer_name } = req.body;
     const hasReview = original_review || (reviews && reviews.length > 0);
@@ -396,7 +421,7 @@ Return this exact JSON structure:
 
 // ─── Generate social widget content ──────────────────────────────────────────
 
-router.post('/generate-widget', authMiddleware, async (req, res) => {
+router.post('/generate-widget', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { widget_type, title, content } = req.body;
 
@@ -497,7 +522,7 @@ Return this exact JSON structure:
 
 // ─── Describe metric ─────────────────────────────────────────────────────────
 
-router.post('/describe-metric', authMiddleware, async (req, res) => {
+router.post('/describe-metric', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { metric_name, value, context } = req.body;
     const hasData = metric_name || value;
@@ -599,7 +624,7 @@ Return this exact JSON structure:
 
 // ─── Polish customer quote ───────────────────────────────────────────────────
 
-router.post('/polish-quote', authMiddleware, async (req, res) => {
+router.post('/polish-quote', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { original_quote, customer_name, company, use_case } = req.body;
     const hasData = original_quote || customer_name || company;
@@ -708,7 +733,7 @@ Return this exact JSON structure:
 
 // ─── Edit video testimonial ──────────────────────────────────────────────────
 
-router.post('/edit-video-testimonial', authMiddleware, async (req, res) => {
+router.post('/edit-video-testimonial', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { original_transcript, customer_name, company, role, video_url, duration } = req.body;
     const hasData = original_transcript || customer_name || company;
@@ -855,7 +880,7 @@ Return this exact JSON structure:
 
 // ─── Generate stats visualization ────────────────────────────────────────────
 
-router.post('/generate-stats', authMiddleware, async (req, res) => {
+router.post('/generate-stats', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { metric_name, value, context, chart_type } = req.body;
     const hasData = metric_name || value;
@@ -981,7 +1006,7 @@ Return this exact JSON structure:
 
 // ─── Extract quotes from text ────────────────────────────────────────────────
 
-router.post('/extract-quotes', authMiddleware, async (req, res) => {
+router.post('/extract-quotes', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const { source_text, source_name, source_type } = req.body;
     const hasData = source_text;
@@ -1110,6 +1135,366 @@ Include 4-5 diverse quotes covering different aspects of the customer experience
   } catch (error) {
     console.error('Extract quotes error:', error.message);
     res.status(500).json({ error: error.message || 'Failed to extract quotes' });
+  }
+});
+
+// ─── A/B Variant Generator ────────────────────────────────────────────────────
+router.post('/generate-variants', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    const { testimonial_id, original_text } = req.body;
+    let text = original_text;
+
+    if (testimonial_id && !text) {
+      const result = await pool.query('SELECT * FROM testimonials WHERE id = $1', [testimonial_id]);
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Testimonial not found' });
+      text = result.rows[0].ai_enhanced_text || result.rows[0].original_text;
+    }
+
+    if (!text) return res.status(400).json({ error: 'testimonial_id or original_text required' });
+
+    const prompt = `Given this testimonial: "${text}"
+
+Generate exactly 3 tone variants. Return ONLY JSON:
+{
+  "variants": [
+    {
+      "tone": "formal",
+      "text": "...",
+      "use_case": "B2B enterprise sales page"
+    },
+    {
+      "tone": "casual",
+      "text": "...",
+      "use_case": "Social media, blog posts"
+    },
+    {
+      "tone": "enthusiastic",
+      "text": "...",
+      "use_case": "Homepage hero, email campaigns"
+    }
+  ],
+  "recommendation": "which variant to use and why"
+}`;
+
+    const generated = await callOpenRouter(prompt, 'You are a copywriter specializing in testimonial optimization. Respond ONLY with JSON.');
+    const parsed = safeParseJSON(generated, null);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+
+    // Store variants in DB
+    if (testimonial_id && parsed?.variants) {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS testimonial_variants (
+          id SERIAL PRIMARY KEY,
+          testimonial_id INTEGER NOT NULL,
+          tone VARCHAR(50),
+          text TEXT,
+          use_case TEXT,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      for (const variant of parsed.variants) {
+        await pool.query(
+          'INSERT INTO testimonial_variants (testimonial_id, tone, text, use_case) VALUES ($1, $2, $3, $4)',
+          [testimonial_id, variant.tone, variant.text, variant.use_case]
+        );
+      }
+    }
+
+    await persistAIResult(req.user?.id, 'generate-variants', { testimonial_id, text: text?.substring(0, 100) }, parsed);
+    res.json(parsed);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Outreach Email Drafter ───────────────────────────────────────────────────
+router.post('/draft-outreach', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    const { customer_name, company, product_used, relationship_context, tone } = req.body;
+    if (!customer_name) return res.status(400).json({ error: 'customer_name is required' });
+
+    const prompt = `Draft a personalized testimonial request email. Return ONLY JSON:
+Customer: ${customer_name} at ${company || 'their company'}
+Product/Service Used: ${product_used || 'our product'}
+Relationship: ${relationship_context || 'existing customer'}
+Requested tone: ${tone || 'friendly and professional'}
+
+Return:
+{
+  "subject": "email subject line",
+  "body": "full email body with personalization",
+  "p.s.": "optional postscript",
+  "follow_up_subject": "follow-up email subject",
+  "follow_up_body": "follow-up email if no response in 7 days"
+}`;
+
+    const generated = await callOpenRouter(prompt, 'You are an expert at writing personalized outreach emails. Respond ONLY with JSON.');
+    const parsed = safeParseJSON(generated, null);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+    await persistAIResult(req.user?.id, 'draft-outreach', { customer_name, company }, parsed);
+    res.json(parsed);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Review Aggregator/Enrichment ────────────────────────────────────────────
+router.post('/aggregate-reviews', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    const reviews = await pool.query('SELECT * FROM reviews ORDER BY created_at DESC LIMIT 20');
+
+    const prompt = `Analyze these reviews and generate enrichment data. Return ONLY JSON:
+Reviews: ${JSON.stringify(reviews.rows.map(r => ({ source: r.source, rating: r.rating, text: r.original_review, sentiment: r.sentiment })))}
+
+Return:
+{
+  "overall_sentiment_score": 0-100,
+  "sentiment_breakdown": {"positive": 0, "neutral": 0, "negative": 0},
+  "top_themes": ["..."],
+  "negative_flags": [{"review_id": 0, "reason": "..."}],
+  "competitor_mentions": ["..."],
+  "feature_requests": ["..."],
+  "summary": "...",
+  "recommendations": ["..."]
+}`;
+
+    const generated = await callOpenRouter(prompt, 'You are a review analytics expert. Respond ONLY with JSON.');
+    const parsed = safeParseJSON(generated, null);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+
+    // Auto-flag negative reviews
+    if (parsed.negative_flags?.length > 0) {
+      for (const flag of parsed.negative_flags) {
+        if (flag.review_id) {
+          await pool.query('UPDATE reviews SET sentiment = $1 WHERE id = $2', ['negative', flag.review_id]);
+        }
+      }
+    }
+
+    await persistAIResult(req.user?.id, 'aggregate-reviews', { count: reviews.rowCount }, parsed);
+    res.json({ ...parsed, review_count: reviews.rowCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET testimonial variants
+router.get('/variants/:testimonialId', authMiddleware, async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS testimonial_variants (
+        id SERIAL PRIMARY KEY, testimonial_id INTEGER NOT NULL,
+        tone VARCHAR(50), text TEXT, use_case TEXT, created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    const result = await pool.query(
+      'SELECT * FROM testimonial_variants WHERE testimonial_id = $1 ORDER BY created_at DESC',
+      [req.params.testimonialId]
+    );
+    res.json({ data: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Customer segmentation for testimonial targeting ─────────────────────────
+router.post('/segment-customers', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    const { criteria } = req.body;
+    let customers = [];
+    try {
+      const r = await pool.query('SELECT * FROM customers ORDER BY created_at DESC LIMIT 200');
+      customers = r.rows;
+    } catch (_) {}
+
+    const systemPrompt = 'You are a marketing analytics expert who clusters customers into testimonial-targeting segments. Respond with raw JSON only.';
+    const prompt = `Segment the customer base for testimonial targeting (e.g., price-conscious, feature-seeker, enterprise, advocate, at-risk).
+Criteria: ${criteria || 'general'}
+Customers sample: ${JSON.stringify(customers.slice(0, 30))}
+Respond ONLY with JSON:
+{
+  "segments": [{"name": "...", "size_estimate": <number>, "characteristics": ["..."], "testimonial_angle": "..."}],
+  "recommended_priority": ["..."],
+  "summary": "..."
+}`;
+    const text = await callOpenRouter(prompt, systemPrompt);
+    const parsed = safeParseJSON(text);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+    await persistAIResult(req.user.id, 'segment-customers', { criteria }, parsed);
+    res.json({ success: true, ...parsed });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Score testimonial likelihood — which customers will give strong proof ──
+router.post('/score-testimonial-likelihood', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    const { customerIds } = req.body;
+    let customers = [];
+    try {
+      if (Array.isArray(customerIds) && customerIds.length) {
+        const r = await pool.query('SELECT * FROM customers WHERE id = ANY($1::int[])', [customerIds]);
+        customers = r.rows;
+      } else {
+        const r = await pool.query('SELECT * FROM customers ORDER BY created_at DESC LIMIT 50');
+        customers = r.rows;
+      }
+    } catch (_) {}
+
+    let reviews = [];
+    try {
+      const r = await pool.query('SELECT * FROM reviews ORDER BY created_at DESC LIMIT 100');
+      reviews = r.rows;
+    } catch (_) {}
+
+    const systemPrompt = 'You are a customer-advocacy scoring expert. Predict which customers are most likely to provide strong testimonials. Respond with raw JSON only.';
+    const prompt = `Score each customer's testimonial likelihood (0-100) and provide brief rationale.
+Customers: ${JSON.stringify(customers.slice(0, 30))}
+Recent reviews context: ${JSON.stringify(reviews.slice(0, 20))}
+Respond ONLY with JSON:
+{
+  "scores": [{"customer_id": <id>, "score": <0-100>, "reasons": ["..."], "suggested_outreach": "..."}],
+  "top_candidates": [<customer_id>],
+  "summary": "..."
+}`;
+    const text = await callOpenRouter(prompt, systemPrompt);
+    const parsed = safeParseJSON(text);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+    await persistAIResult(req.user.id, 'score-testimonial-likelihood', { customerIds }, parsed);
+    res.json({ success: true, ...parsed });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Authenticity Scoring (LLM-only) ─────────────────────────────────────────
+// Scores how likely a piece of social proof is human-authored vs AI-generated/fake.
+router.post('/score-authenticity', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    if (!process.env.OPENROUTER_API_KEY) {
+      return res.status(503).json({ error: 'AI features unavailable: OPENROUTER_API_KEY is not configured.' });
+    }
+    const { text, source, author_context } = req.body;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'text is required' });
+    }
+
+    const systemPrompt = 'You are an expert in detecting AI-generated, scripted, or astroturfed content. Score authenticity rigorously. Respond with raw JSON only.';
+    const prompt = `Evaluate the authenticity of the following social-proof content. Score 0-100 (100 = clearly genuine human-authored, 0 = clearly fabricated / AI-generated / scripted).
+
+Source: ${source || 'unknown'}
+Author context: ${author_context || 'none provided'}
+
+Content:
+"""
+${text}
+"""
+
+Return ONLY JSON:
+{
+  "authenticity_score": <0-100>,
+  "verdict": "<genuine|likely_genuine|uncertain|likely_fabricated|fabricated>",
+  "ai_generated_probability": <0-1>,
+  "signals": {
+    "linguistic": ["..."],
+    "specificity": ["..."],
+    "emotion": ["..."],
+    "red_flags": ["..."]
+  },
+  "concrete_details_count": <number>,
+  "vague_phrases": ["..."],
+  "recommendation": "<publish|review_manually|reject>",
+  "summary": "<1-2 sentence overall assessment>"
+}`;
+    const out = await callOpenRouter(prompt, systemPrompt);
+    const parsed = safeParseJSON(out);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+    await persistAIResult(req.user?.id, 'score-authenticity', { source, length: text.length }, parsed);
+    res.json({ success: true, ...parsed });
+  } catch (err) {
+    if (err.message && /OPENROUTER_API_KEY/i.test(err.message)) {
+      return res.status(503).json({ error: err.message });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Sentiment-driven persona variant generation ─────────────────────────────
+// Extension of /generate-variants — generates testimonial variants tailored to
+// specific personas, each calibrated to a target sentiment intensity.
+router.post('/generate-variants-by-persona', authMiddleware, aiRateLimiter, async (req, res) => {
+  try {
+    if (!process.env.OPENROUTER_API_KEY) {
+      return res.status(503).json({ error: 'AI features unavailable: OPENROUTER_API_KEY is not configured.' });
+    }
+    const { testimonial_id, original_text, personas, target_sentiment } = req.body;
+    let text = original_text;
+
+    if (testimonial_id && !text) {
+      try {
+        const result = await pool.query('SELECT * FROM testimonials WHERE id = $1', [testimonial_id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Testimonial not found' });
+        text = result.rows[0].ai_enhanced_text || result.rows[0].original_text;
+      } catch (_) {}
+    }
+    if (!text) return res.status(400).json({ error: 'testimonial_id or original_text required' });
+
+    const personaList = Array.isArray(personas) && personas.length
+      ? personas
+      : ['enterprise_buyer', 'small_business_owner', 'technical_evaluator', 'price_conscious'];
+    const sentiment = target_sentiment || 'high_enthusiasm';
+
+    const systemPrompt = 'You are a copywriter who tailors testimonial language to buyer personas while calibrating sentiment intensity. Respond with raw JSON only.';
+    const prompt = `Original testimonial: "${text}"
+
+For each of these personas, generate ONE variant calibrated to "${sentiment}" sentiment. Personas: ${personaList.join(', ')}.
+
+Return ONLY JSON:
+{
+  "target_sentiment": "${sentiment}",
+  "variants": [
+    {
+      "persona": "<persona key>",
+      "tone": "<tone descriptor>",
+      "text": "<rewritten testimonial>",
+      "sentiment_score": <0-1>,
+      "use_case": "<page/channel suggestion>",
+      "key_emphasis": ["..."]
+    }
+  ],
+  "recommendation": "<which variant has the strongest match for the target sentiment, and why>"
+}`;
+
+    const generated = await callOpenRouter(prompt, systemPrompt);
+    const parsed = safeParseJSON(generated, null);
+    if (!parsed) return res.status(422).json({ error: 'AI returned invalid JSON' });
+
+    // Persist persona variants in same testimonial_variants table when ID provided
+    if (testimonial_id && Array.isArray(parsed.variants)) {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS testimonial_variants (
+            id SERIAL PRIMARY KEY,
+            testimonial_id INTEGER NOT NULL,
+            tone VARCHAR(50),
+            text TEXT,
+            use_case TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        for (const variant of parsed.variants) {
+          await pool.query(
+            'INSERT INTO testimonial_variants (testimonial_id, tone, text, use_case) VALUES ($1, $2, $3, $4)',
+            [testimonial_id, `${variant.persona || 'persona'}/${variant.tone || sentiment}`, variant.text, variant.use_case]
+          );
+        }
+      } catch (_) {}
+    }
+
+    await persistAIResult(req.user?.id, 'generate-variants-by-persona', { testimonial_id, personas: personaList, target_sentiment: sentiment }, parsed);
+    res.json({ success: true, ...parsed });
+  } catch (err) {
+    if (err.message && /OPENROUTER_API_KEY/i.test(err.message)) {
+      return res.status(503).json({ error: err.message });
+    }
+    res.status(500).json({ error: err.message });
   }
 });
 

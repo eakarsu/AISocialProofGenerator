@@ -14,6 +14,28 @@ import VideoTestimonials from './pages/VideoTestimonials'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Profile from './pages/Profile'
+import WidgetBuilder from './pages/WidgetBuilder'
+import TestimonialVariants from './pages/TestimonialVariants'
+import OutreachCampaigns from './pages/OutreachCampaigns'
+import CustomerSegmentation from './pages/CustomerSegmentation'
+import TestimonialLikelihood from './pages/TestimonialLikelihood'
+import AuthenticityScorer from './pages/AuthenticityScorer'
+import PersonaVariants from './pages/PersonaVariants'
+// === Batch 08 Gaps & Frontend Mounts ===
+import CfSentimentDrivenVariantGenerationTunedToBuyer from './pages/CfSentimentDrivenVariantGenerationTunedToBuyer'
+import CfMultiModalProofWidgetsCombiningVideoAudio from './pages/CfMultiModalProofWidgetsCombiningVideoAudio'
+import CfCompetitiveTestimonialAnalysisViaRagOverCompetitor from './pages/CfCompetitiveTestimonialAnalysisViaRagOverCompetitor'
+import CfAuthenticityScoringToDetectAiGeneratedVs from './pages/CfAuthenticityScoringToDetectAiGeneratedVs'
+import CfOneClickMarketplacePublishingToCapterraG2 from './pages/CfOneClickMarketplacePublishingToCapterraG2'
+import CfReviewCrawlerServiceWithScheduledPollingOf from './pages/CfReviewCrawlerServiceWithScheduledPollingOf'
+import GapNoAiDrivenCustomerSegmentationForTargeted from './pages/GapNoAiDrivenCustomerSegmentationForTargeted'
+import GapNoPredictiveScoringForWhichCustomersAre from './pages/GapNoPredictiveScoringForWhichCustomersAre'
+import GapNoAutomatedVisualAssetPosterSocialCard from './pages/GapNoAutomatedVisualAssetPosterSocialCard'
+import GapNoIntegrationsWithTrustpilotG2CapterraReview from './pages/GapNoIntegrationsWithTrustpilotG2CapterraReview'
+import GapNoABTestingFrameworkForWidget from './pages/GapNoABTestingFrameworkForWidget'
+import GapNoScheduledBatchReviewCrawlingFromExternal from './pages/GapNoScheduledBatchReviewCrawlingFromExternal'
+import GapNoWebhooksNotificationsSystemForNewReview from './pages/GapNoWebhooksNotificationsSystemForNewReview'
+import GapLimitedAuditLoggingSingleReferenceNotA from './pages/GapLimitedAuditLoggingSingleReferenceNotA'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -124,6 +146,77 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/widget-builder"
+        element={
+          <ProtectedRoute>
+            <WidgetBuilder />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/testimonial-variants"
+        element={
+          <ProtectedRoute>
+            <TestimonialVariants />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/outreach-campaigns"
+        element={
+          <ProtectedRoute>
+            <OutreachCampaigns />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customer-segmentation"
+        element={
+          <ProtectedRoute>
+            <CustomerSegmentation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/testimonial-likelihood"
+        element={
+          <ProtectedRoute>
+            <TestimonialLikelihood />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/authenticity-scorer"
+        element={
+          <ProtectedRoute>
+            <AuthenticityScorer />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/persona-variants"
+        element={
+          <ProtectedRoute>
+            <PersonaVariants />
+          </ProtectedRoute>
+        }
+      />
+      {/* // === Batch 08 Gaps & Frontend Mounts === */}
+      <Route path="/cf-sentiment-driven-variant-generation-tuned-to-buyer-personas-price-conscious" element={<ProtectedRoute><CfSentimentDrivenVariantGenerationTunedToBuyer /></ProtectedRoute>} />
+      <Route path="/cf-multi-modal-proof-widgets-combining-video-audio-text-with" element={<ProtectedRoute><CfMultiModalProofWidgetsCombiningVideoAudio /></ProtectedRoute>} />
+      <Route path="/cf-competitive-testimonial-analysis-via-rag-over-competitor-reviews" element={<ProtectedRoute><CfCompetitiveTestimonialAnalysisViaRagOverCompetitor /></ProtectedRoute>} />
+      <Route path="/cf-authenticity-scoring-to-detect-ai-generated-vs-real-testimonials" element={<ProtectedRoute><CfAuthenticityScoringToDetectAiGeneratedVs /></ProtectedRoute>} />
+      <Route path="/cf-one-click-marketplace-publishing-to-capterra-g2-producthunt-with" element={<ProtectedRoute><CfOneClickMarketplacePublishingToCapterraG2 /></ProtectedRoute>} />
+      <Route path="/cf-review-crawler-service-with-scheduled-polling-of-external" element={<ProtectedRoute><CfReviewCrawlerServiceWithScheduledPollingOf /></ProtectedRoute>} />
+      <Route path="/gap-no-ai-driven-customer-segmentation-for-targeted-testimonial-selection" element={<ProtectedRoute><GapNoAiDrivenCustomerSegmentationForTargeted /></ProtectedRoute>} />
+      <Route path="/gap-no-predictive-scoring-for-which-customers-are-most" element={<ProtectedRoute><GapNoPredictiveScoringForWhichCustomersAre /></ProtectedRoute>} />
+      <Route path="/gap-no-automated-visual-asset-poster-social-card-generation" element={<ProtectedRoute><GapNoAutomatedVisualAssetPosterSocialCard /></ProtectedRoute>} />
+      <Route path="/gap-no-integrations-with-trustpilot-g2-capterra-review-platforms" element={<ProtectedRoute><GapNoIntegrationsWithTrustpilotG2CapterraReview /></ProtectedRoute>} />
+      <Route path="/gap-no-a-b-testing-framework-for-widget-placement" element={<ProtectedRoute><GapNoABTestingFrameworkForWidget /></ProtectedRoute>} />
+      <Route path="/gap-no-scheduled-batch-review-crawling-from-external-sources" element={<ProtectedRoute><GapNoScheduledBatchReviewCrawlingFromExternal /></ProtectedRoute>} />
+      <Route path="/gap-no-webhooks-notifications-system-for-new-review-or" element={<ProtectedRoute><GapNoWebhooksNotificationsSystemForNewReview /></ProtectedRoute>} />
+      <Route path="/gap-limited-audit-logging-single-reference-not-a-dedicated" element={<ProtectedRoute><GapLimitedAuditLoggingSingleReferenceNotA /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
