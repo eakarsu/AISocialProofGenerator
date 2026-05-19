@@ -146,6 +146,15 @@ function Sidebar() {
       ),
     },
   
+    {
+      path: '/custom-views',
+      label: 'Proof Views',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 3h7v7H3V3zm11 0h7v4h-7V3zm0 7h7v11h-7V10zM3 14h7v7H3v-7z" />
+        </svg>
+      ),
+    },
     // // === Batch 08 Gaps & Frontend Mounts ===
     { path: '/cf-sentiment-driven-variant-generation-tuned-to-buyer-personas-price-conscious', label: 'Sentiment-driven variant generation tuned to buyer...' },
     { path: '/cf-multi-modal-proof-widgets-combining-video-audio-text-with', label: 'Multi-modal proof widgets combining video + audio...' },

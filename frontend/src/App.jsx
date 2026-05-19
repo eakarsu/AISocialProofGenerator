@@ -36,6 +36,7 @@ import GapNoABTestingFrameworkForWidget from './pages/GapNoABTestingFrameworkFor
 import GapNoScheduledBatchReviewCrawlingFromExternal from './pages/GapNoScheduledBatchReviewCrawlingFromExternal'
 import GapNoWebhooksNotificationsSystemForNewReview from './pages/GapNoWebhooksNotificationsSystemForNewReview'
 import GapLimitedAuditLoggingSingleReferenceNotA from './pages/GapLimitedAuditLoggingSingleReferenceNotA'
+import CustomViewsPage from './pages/CustomViewsPage'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -217,6 +218,7 @@ function App() {
       <Route path="/gap-no-scheduled-batch-review-crawling-from-external-sources" element={<ProtectedRoute><GapNoScheduledBatchReviewCrawlingFromExternal /></ProtectedRoute>} />
       <Route path="/gap-no-webhooks-notifications-system-for-new-review-or" element={<ProtectedRoute><GapNoWebhooksNotificationsSystemForNewReview /></ProtectedRoute>} />
       <Route path="/gap-limited-audit-logging-single-reference-not-a-dedicated" element={<ProtectedRoute><GapLimitedAuditLoggingSingleReferenceNotA /></ProtectedRoute>} />
+      <Route path="/custom-views" element={<ProtectedRoute><CustomViewsPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

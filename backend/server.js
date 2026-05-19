@@ -77,6 +77,14 @@ app.use('/api/gap-no-scheduled-batch-review-crawling-from-external-sources', req
 app.use('/api/gap-no-webhooks-notifications-system-for-new-review-or', require('./routes/gapNoWebhooksNotificationsSystemForNewReviewOr'));
 app.use('/api/gap-limited-audit-logging-single-reference-not-a-dedicated', require('./routes/gapLimitedAuditLoggingSingleReferenceNotADedicated'));
 
+// === Custom Views (4 features: 2 VIZ + 2 NON-VIZ) — mounted BEFORE 404 handler ===
+app.use('/api/custom-views', require('./routes/customViews'));
+
+// 404 fallback for unknown /api/* routes (must remain after all route mounts)
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'Not found', path: req.originalUrl });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`OpenRouter API Key configured: ${process.env.OPENROUTER_API_KEY ? 'Yes' : 'No'}`);
