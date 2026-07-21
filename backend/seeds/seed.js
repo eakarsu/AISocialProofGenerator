@@ -225,6 +225,26 @@ const seedData = async () => {
       );
     }
 
+    const governedSchema = await pool.query("SELECT to_regclass('public.proof_users') AS users_table");
+    if (governedSchema.rows[0].users_table) {
+      const governedEmail = process.env.SEED_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@example.com';
+      const governedPassword = process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'Admin123!';
+      const governedName = process.env.BOOTSTRAP_ADMIN_NAME || 'Admin User';
+      const governedTenantName = process.env.BOOTSTRAP_TENANT_NAME || 'Development Tenant';
+      const governedHash = await bcrypt.hash(governedPassword, 10);
+      const governedUser = await pool.query(
+        'INSERT INTO proof_users(email,password_hash,name) VALUES ($1,$2,$3) ON CONFLICT(email) DO UPDATE SET password_hash=EXCLUDED.password_hash,name=EXCLUDED.name RETURNING id',
+        [governedEmail, governedHash, governedName],
+      );
+      let governedTenant = await pool.query('SELECT id FROM proof_tenants WHERE name=$1 ORDER BY id LIMIT 1', [governedTenantName]);
+      if (!governedTenant.rows[0]) governedTenant = await pool.query('INSERT INTO proof_tenants(name) VALUES ($1) RETURNING id', [governedTenantName]);
+      await pool.query(
+        "INSERT INTO proof_memberships(tenant_id,user_id,role,active) VALUES ($1,$2,'admin',TRUE) ON CONFLICT(tenant_id,user_id) DO UPDATE SET role='admin',active=TRUE",
+        [governedTenant.rows[0].id, governedUser.rows[0].id],
+      );
+      console.log(`Governed login seeded for ${governedEmail}.`);
+    }
+
     console.log('Seed completed successfully!');
     console.log('Test accounts:');
     console.log('  Admin: demo@example.com / demo123');
