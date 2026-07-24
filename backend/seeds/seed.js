@@ -247,7 +247,7 @@ const seedData = async () => {
 
     console.log('Seed completed successfully!');
     console.log('Test accounts:');
-    console.log('  Admin: demo@example.com / demo123');
+    console.log('Demo login users provisioned from the local environment.');
     console.log('  Editor: editor@example.com / Editor123!');
     console.log('  Viewer: viewer@example.com / Viewer123!');
     process.exit(0);
