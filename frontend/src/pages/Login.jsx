@@ -143,7 +143,7 @@ function Login() {
                   Signing in...
                 </span>
               ) : (
-                'Sign in'
+                'Sign In'
               )}
             </button>
           </form>
@@ -157,7 +157,7 @@ function Login() {
               <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Try with demo credentials
+              Auto Fill Demo Credentials
             </button>
             <p className="text-[11px] text-slate-400 text-center mt-2">
               Auto-fills email and password for testing
