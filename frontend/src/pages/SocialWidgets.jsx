@@ -11,7 +11,7 @@ import Pagination from '../components/Pagination'
 import FilterControls from '../components/FilterControls'
 import BulkActions from '../components/BulkActions'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function SocialWidgets() {
   const { user } = useAuth()
@@ -204,11 +204,11 @@ function SocialWidgets() {
   }
 
   const handleExportCsv = () => {
-    window.open('http://localhost:5001/api/social-widgets/export/csv', '_blank')
+    window.open('/api/social-widgets/export/csv', '_blank')
   }
 
   const handleExportPdf = () => {
-    window.open('http://localhost:5001/api/social-widgets/export/pdf', '_blank')
+    window.open('/api/social-widgets/export/pdf', '_blank')
   }
 
   const handleEdit = (item) => {

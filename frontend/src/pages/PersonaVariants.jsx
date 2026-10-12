@@ -1,7 +1,9 @@
+import AIReport from '../components/AIReport'
+import FullFieldPresets from '../components/FullFieldPresets'
 import { useState } from 'react'
 import { Sparkles, Users } from 'lucide-react'
 
-const API_BASE = 'http://localhost:5001'
+const API_BASE = ''
 
 function getHeaders() {
   const token = localStorage.getItem('token')
@@ -66,6 +68,12 @@ export default function PersonaVariants() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 p-6 mb-6 space-y-4">
+        <FullFieldPresets value={{ testimonialId, originalText, personasText, targetSentiment }} presets={[
+          { label: 'Enterprise buyer', values: { originalText: 'Our deployment process is more consistent, and the team can now review the same dashboard each morning. We are still measuring the longer-term savings.', personasText: 'enterprise_buyer, technical_evaluator', targetSentiment: 'measured_confidence' } },
+          { label: 'Small business', values: { originalText: 'We had limited time for setup, but the core workflow was running in a week. The support team answered our questions quickly.', personasText: 'small_business_owner, price_conscious', targetSentiment: 'reflective' } },
+          { label: 'Technical review', values: { originalText: 'The API integration took two days of engineering work. Documentation was clear, and our error rate declined after launch.', personasText: 'technical_evaluator, enterprise_buyer', targetSentiment: 'cautious_optimism' } },
+        ]} disabled={loading} onChange={(next) => { setOriginalText(next.originalText); setPersonasText(next.personasText); setTargetSentiment(next.targetSentiment) }} />
+        <p className="text-xs text-slate-500">Any testimonial ID already entered is preserved and must refer to a real record.</p>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Testimonial ID (optional)</label>
           <input
@@ -117,28 +125,7 @@ export default function PersonaVariants() {
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-4">{error}</div>}
 
-      {result && Array.isArray(result.variants) && (
-        <div className="space-y-3">
-          {result.variants.map((v, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-semibold text-slate-800">{v.persona}</div>
-                <div className="text-xs text-slate-500">{v.tone} · sentiment {typeof v.sentiment_score === 'number' ? v.sentiment_score.toFixed(2) : '-'}</div>
-              </div>
-              <p className="text-sm text-slate-700 mb-2 whitespace-pre-wrap">{v.text}</p>
-              {v.use_case && <div className="text-xs text-slate-500">Use case: {v.use_case}</div>}
-              {Array.isArray(v.key_emphasis) && v.key_emphasis.length > 0 && (
-                <div className="text-xs text-slate-500 mt-1">Emphasis: {v.key_emphasis.join(', ')}</div>
-              )}
-            </div>
-          ))}
-          {result.recommendation && (
-            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-sm text-indigo-800">
-              <span className="font-semibold">Recommendation:</span> {result.recommendation}
-            </div>
-          )}
-        </div>
-      )}
+      <AIReport response={result} title="Persona variants" />
     </div>
   )
 }

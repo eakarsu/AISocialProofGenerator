@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Mail, Upload, Send, RefreshCw, CheckCircle, Clock, Loader } from 'lucide-react'
 
-const API_BASE = 'http://localhost:5001'
+const API_BASE = ''
 
 function getHeaders() {
   const token = localStorage.getItem('token')

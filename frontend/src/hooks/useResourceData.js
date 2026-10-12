@@ -1,11 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
-export function useResourceData(endpoint, { defaultLimit = 10 } = {}) {
+export function recordsFromResponse(payload) {
+  if (Array.isArray(payload)) return { rows: payload, total: payload.length, totalPages: 1 }
+  const rows = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload?.items) ? payload.items : []
+  return {
+    rows,
+    total: Number(payload?.pagination?.total ?? payload?.total ?? rows.length),
+    totalPages: Number(payload?.pagination?.totalPages ?? payload?.pagination?.total_pages ?? payload?.totalPages ?? 1),
+  }
+}
+
+export function useResourceData(endpoint, { defaultLimit = 15 } = {}) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -31,12 +42,15 @@ export function useResourceData(endpoint, { defaultLimit = 10 } = {}) {
       })
 
       const response = await axios.get(`${API_URL}/${endpoint}?${params}`)
-      setData(response.data.data || [])
-      setTotal(response.data.total || 0)
-      setTotalPages(response.data.totalPages || 1)
+      const normalized = recordsFromResponse(response.data)
+      setData(normalized.rows)
+      setTotal(normalized.total)
+      setTotalPages(normalized.totalPages)
+      setError(Array.isArray(response.data) || Array.isArray(response.data?.data) || Array.isArray(response.data?.items) ? '' : 'The records service returned an invalid list.')
     } catch (error) {
       console.error(`Error fetching ${endpoint}:`, error)
       setData([])
+      setError(error.response?.data?.error || `Unable to load ${endpoint}.`)
     } finally {
       setLoading(false)
     }
@@ -82,6 +96,7 @@ export function useResourceData(endpoint, { defaultLimit = 10 } = {}) {
   return {
     data,
     loading,
+    error,
     total,
     page,
     totalPages,

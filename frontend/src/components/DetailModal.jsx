@@ -1,3 +1,4 @@
+import AIReport from './AIReport'
 import { useState } from 'react'
 
 function DetailModal({ isOpen, onClose, title, data, fields, onEdit, onDelete }) {
@@ -47,7 +48,7 @@ function DetailModal({ isOpen, onClose, title, data, fields, onEdit, onDelete })
                 {field.label}
               </label>
               <div className="text-sm text-slate-800 bg-slate-50 rounded-xl p-3.5 whitespace-pre-wrap border border-slate-100">
-                {field.render ? field.render(data[field.key], data) : (data[field.key] || '-')}
+                {(data[field.key] && typeof data[field.key] === 'object') || (typeof data[field.key] === 'string' && /^[\s]*[\[{]/.test(data[field.key])) ? <AIReport response={data[field.key]} title={field.label} /> : field.render ? field.render(data[field.key], data) : (data[field.key] === null || data[field.key] === undefined ? '-' : data[field.key] === '' ? '(empty string)' : typeof data[field.key] === 'boolean' ? (data[field.key] ? 'Yes' : 'No') : data[field.key])}
               </div>
             </div>
           ))}

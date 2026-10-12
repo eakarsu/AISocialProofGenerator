@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const API_URL = 'http://localhost:5001/api/custom-views'
+const API_URL = '/api/custom-views'
 
 function BrandAssetKit() {
   const [brand, setBrand] = useState('Social Proof Studio')

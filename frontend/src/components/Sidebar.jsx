@@ -1,3 +1,4 @@
+import AIReportLibrary from "./AIReportLibrary";
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -317,7 +318,7 @@ function Sidebar() {
       {/* Desktop sidebar */}
       <aside className={`hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 bg-slate-900 border-r border-slate-700/50 transition-all duration-300 ${collapsed ? 'lg:w-[72px]' : 'lg:w-60'}`}>
         {sidebarContent}
-      </aside>
+      <AIReportLibrary /></aside>
     </>
   )
 }

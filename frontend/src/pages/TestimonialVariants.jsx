@@ -1,7 +1,9 @@
+import AIReport from '../components/AIReport'
+import FullFieldPresets from '../components/FullFieldPresets'
 import { useState, useEffect } from 'react'
 import { Sparkles, RefreshCw, Copy, CheckCircle } from 'lucide-react'
 
-const API_BASE = 'http://localhost:5001'
+const API_BASE = ''
 
 function getHeaders() {
   const token = localStorage.getItem('token')
@@ -72,6 +74,12 @@ export default function TestimonialVariants() {
 
       <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
         <div className="space-y-4">
+          <FullFieldPresets value={{ selectedId, customText }} presets={[
+            { label: 'Team workflow', values: { customText: 'Our team now reviews customer feedback in one place. The weekly handoff is clearer, though we are still refining our tagging process.' } },
+            { label: 'Support result', values: { customText: 'The support team helped us resolve the rollout issue within a day. We appreciated the clear updates throughout the process.' } },
+            { label: 'Product adoption', values: { customText: 'After a month, most of our team was using the dashboard every day. We still need a few reporting features, but the core workflow is useful.' } },
+          ]} disabled={loading} onChange={(next) => { if (!selectedId) setCustomText(next.customText) }} />
+          {selectedId && <p className="text-xs text-slate-500">Your selected testimonial is preserved. Clear the selection to use example text.</p>}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Select Existing Testimonial</label>
             <select
@@ -111,36 +119,7 @@ export default function TestimonialVariants() {
 
       {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm mb-4">{error}</div>}
 
-      {variants?.variants && (
-        <div className="space-y-4">
-          {variants.variants.map((v, i) => (
-            <div key={i} className={`rounded-xl border p-5 ${TONE_COLORS[v.tone] || 'bg-gray-50 border-gray-200'}`}>
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wide ${TONE_BADGE[v.tone] || 'bg-gray-100 text-gray-700'}`}>
-                  {v.tone}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">{v.use_case}</span>
-                  <button
-                    onClick={() => handleCopy(v.text, i)}
-                    className="text-xs flex items-center gap-1 px-2 py-1 rounded bg-white border border-slate-200 hover:border-slate-300 text-slate-600"
-                  >
-                    {copiedIdx === i ? <><CheckCircle className="w-3 h-3 text-green-500" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
-                  </button>
-                </div>
-              </div>
-              <p className="text-sm text-slate-800 leading-relaxed italic">"{v.text}"</p>
-            </div>
-          ))}
-
-          {variants.recommendation && (
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-              <p className="text-sm font-medium text-indigo-700 mb-1">AI Recommendation</p>
-              <p className="text-sm text-indigo-600">{variants.recommendation}</p>
-            </div>
-          )}
-        </div>
-      )}
+      <AIReport response={variants} title="Testimonial variants" />
     </div>
   )
 }

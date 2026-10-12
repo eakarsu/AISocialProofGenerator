@@ -26,9 +26,17 @@ function Login() {
     setLoading(false)
   }
 
-  const handleDemoLogin = () => {
-    setEmail(import.meta.env.VITE_DEMO_EMAIL || '')
-    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '')
+  const handleDemoLogin = async () => {
+    setError('')
+    try {
+      const response = await fetch('/api/auth/demo-credentials', { cache: 'no-store' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Demo credentials are unavailable')
+      setEmail(data.email)
+      setPassword(data.password)
+    } catch (failure) {
+      setError(failure.message)
+    }
   }
 
   return (
@@ -151,13 +159,13 @@ function Login() {
           {/* Demo login */}
           <div className="mt-8 pt-6 border-t border-slate-100">
             <button
-              onClick={handleDemoLogin}
+              type="button" onClick={handleDemoLogin}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 text-sm font-medium"
             >
               <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Auto Fill Demo Credentials
+              Fill demo credentials
             </button>
             <p className="text-[11px] text-slate-400 text-center mt-2">
               Auto-fills email and password for testing

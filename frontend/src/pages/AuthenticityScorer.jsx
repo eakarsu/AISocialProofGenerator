@@ -1,7 +1,9 @@
+import AIReport from '../components/AIReport'
+import FullFieldPresets from '../components/FullFieldPresets'
 import { useState } from 'react'
 import { Sparkles, ShieldCheck } from 'lucide-react'
 
-const API_BASE = 'http://localhost:5001'
+const API_BASE = ''
 
 function getHeaders() {
   const token = localStorage.getItem('token')
@@ -47,6 +49,11 @@ export default function AuthenticityScorer() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 p-6 mb-6 space-y-4">
+        <FullFieldPresets value={{ text, source, author_context: authorContext }} presets={[
+          { label: 'Verified buyer review', values: { text: 'We trialed the platform for six weeks. Our support team now resolves routine requests sooner, although onboarding took longer than expected.', source: 'G2 review', author_context: 'Verified buyer; support operations manager at a mid-sized SaaS company' } },
+          { label: 'Customer email', values: { text: 'The reporting dashboard saved our team several hours each week. We still export the monthly summary manually, but day-to-day visibility improved.', source: 'Customer email', author_context: 'Existing customer; analytics lead who approved internal review' } },
+          { label: 'Event quote', values: { text: 'The setup was straightforward for our small team, and we could see the first useful results within a month. We need more time to assess long-term impact.', source: 'Conference interview', author_context: 'Operations director; quote awaiting publication consent' } },
+        ]} disabled={loading} onChange={(next) => { setText(next.text); setSource(next.source); setAuthorContext(next.author_context) }} />
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Content (testimonial / review / quote)</label>
           <textarea
@@ -88,42 +95,7 @@ export default function AuthenticityScorer() {
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-4">{error}</div>}
 
-      {result && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="text-4xl font-bold text-indigo-600">{result.authenticity_score ?? '-'}</div>
-            <div>
-              <div className="text-sm text-slate-500">Verdict</div>
-              <div className="font-semibold text-slate-800">{result.verdict || 'unknown'}</div>
-            </div>
-            {typeof result.ai_generated_probability === 'number' && (
-              <div>
-                <div className="text-sm text-slate-500">AI-Generated Probability</div>
-                <div className="font-semibold text-slate-800">{Math.round(result.ai_generated_probability * 100)}%</div>
-              </div>
-            )}
-          </div>
-          {result.summary && <p className="text-sm text-slate-600">{result.summary}</p>}
-          {result.signals && (
-            <div className="grid md:grid-cols-2 gap-3 text-sm">
-              {Object.entries(result.signals).map(([k, v]) => (
-                <div key={k} className="bg-slate-50 rounded-lg p-3">
-                  <div className="font-semibold text-slate-700 capitalize">{k.replace('_', ' ')}</div>
-                  <ul className="list-disc list-inside text-slate-600">
-                    {Array.isArray(v) ? v.map((item, i) => <li key={i}>{item}</li>) : <li>{String(v)}</li>}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-          {result.recommendation && (
-            <div className="text-sm">
-              <span className="font-semibold text-slate-700">Recommendation:</span>{' '}
-              <span className="text-slate-600">{result.recommendation}</span>
-            </div>
-          )}
-        </div>
-      )}
+      <AIReport response={result} title="Authenticity assessment" />
     </div>
   )
 }

@@ -11,7 +11,7 @@ import Pagination from '../components/Pagination'
 import FilterControls from '../components/FilterControls'
 import BulkActions from '../components/BulkActions'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function Testimonials() {
   const { user } = useAuth()
@@ -203,11 +203,11 @@ function Testimonials() {
   }
 
   const handleExportCsv = () => {
-    window.open('http://localhost:5001/api/testimonials/export/csv', '_blank')
+    window.open('/api/testimonials/export/csv', '_blank')
   }
 
   const handleExportPdf = () => {
-    window.open('http://localhost:5001/api/testimonials/export/pdf', '_blank')
+    window.open('/api/testimonials/export/pdf', '_blank')
   }
 
   const handleEdit = (item) => {

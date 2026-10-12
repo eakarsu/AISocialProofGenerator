@@ -11,7 +11,7 @@ import Pagination from '../components/Pagination'
 import FilterControls from '../components/FilterControls'
 import BulkActions from '../components/BulkActions'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function Reviews() {
   const { user } = useAuth()

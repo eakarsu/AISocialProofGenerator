@@ -16,5 +16,14 @@ router.post('/login',async(req,res)=>{
     res.json({token,user});
   }catch(_error){res.status(500).json({error:'Login failed'});}
 });
+router.get('/demo-credentials',(req,res)=>{
+  const enabled=process.env.ENABLE_DEMO_CREDENTIAL_AUTOFILL==='true'||(process.env.ENABLE_DEMO_CREDENTIAL_AUTOFILL!=='false'&&process.env.NODE_ENV!=='production');
+  const local=['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+  const email=String(process.env.DEMO_EMAIL||process.env.SEED_ADMIN_EMAIL||process.env.ADMIN_EMAIL||'').trim();
+  const password=String(process.env.DEMO_PASSWORD||process.env.SEED_ADMIN_PASSWORD||process.env.ADMIN_PASSWORD||'');
+  res.set('Cache-Control','no-store');
+  if(!enabled||!local||!email||!password)return res.status(404).json({error:'Local demo autofill is unavailable. Configure and enable the existing demo account first.'});
+  return res.json({email,password});
+});
 router.get('/me',authenticate,(req,res)=>res.json({user:req.user}));
 module.exports=router;

@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import FeatureCard from '../components/FeatureCard'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function Dashboard() {
   const { user } = useAuth()

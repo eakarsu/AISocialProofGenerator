@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:5001/api/custom-views'
+const API_URL = '/api/custom-views'
 
 function PlatformEngagementHeatmap() {
   const [data, setData] = useState(null)

@@ -1,7 +1,9 @@
+import AIReport from '../components/AIReport'
+import FullFieldPresets from '../components/FullFieldPresets'
 import { useState } from 'react'
 import { Sparkles, Star } from 'lucide-react'
 
-const API_BASE = 'http://localhost:5001'
+const API_BASE = ''
 
 function getHeaders() {
   const token = localStorage.getItem('token')
@@ -50,6 +52,12 @@ export default function TestimonialLikelihood() {
       </div>
 
       <form onSubmit={handleGenerate} className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+        <FullFieldPresets value={{ customerIdsText }} presets={[
+          { label: 'Recent customers', values: { customerIdsText: '' } },
+          { label: 'Current selection', values: { customerIdsText } },
+          { label: 'All recent', values: { customerIdsText: '' } },
+        ]} disabled={loading} onChange={(next) => setCustomerIdsText(next.customerIdsText)} />
+        <p className="text-xs text-slate-500 mb-3">Customer IDs must come from real records. These examples use the recent-customer mode or preserve your current selection.</p>
         <label className="block text-sm font-medium text-slate-700 mb-1">
           Customer IDs (comma or space separated; leave blank for recent customers)
         </label>
@@ -70,41 +78,7 @@ export default function TestimonialLikelihood() {
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-4">{error}</div>}
 
-      {result && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          {result.summary && <p className="text-sm text-slate-600">{result.summary}</p>}
-          {Array.isArray(result.scores) && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b border-slate-200">
-                    <th className="py-2 pr-4">Customer</th>
-                    <th className="py-2 pr-4">Score</th>
-                    <th className="py-2 pr-4">Reasons</th>
-                    <th className="py-2 pr-4">Suggested Outreach</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.scores.map((s, i) => (
-                    <tr key={i} className="border-b border-slate-100">
-                      <td className="py-2 pr-4">{s.customer_id}</td>
-                      <td className="py-2 pr-4 font-semibold">{s.score}</td>
-                      <td className="py-2 pr-4">{Array.isArray(s.reasons) ? s.reasons.join('; ') : ''}</td>
-                      <td className="py-2 pr-4">{s.suggested_outreach || ''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {Array.isArray(result.top_candidates) && result.top_candidates.length > 0 && (
-            <div>
-              <h4 className="font-semibold text-slate-800 mb-1">Top Candidates</h4>
-              <p className="text-sm text-slate-600">{result.top_candidates.join(', ')}</p>
-            </div>
-          )}
-        </div>
-      )}
+      <AIReport response={result} title="Testimonial likelihood" />
     </div>
   )
 }

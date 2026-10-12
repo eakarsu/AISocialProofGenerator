@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:5001/api/custom-views/widget-rules'
+const API_URL = '/api/custom-views/widget-rules'
 
 const PLACEMENTS = ['homepage_hero', 'checkout', 'pricing', 'blog_sidebar', 'product_detail', 'signup_page']
 const WIDGET_TYPES = ['testimonial_card', 'trust_badge', 'quote_strip', 'review_carousel', 'video_embed', 'star_rating']

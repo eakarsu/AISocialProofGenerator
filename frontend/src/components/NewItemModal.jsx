@@ -12,6 +12,28 @@ function NewItemModal({ isOpen, onClose, title, fields, onSubmit, onAiGenerate, 
   const [showAiResult, setShowAiResult] = useState(false)
 
   const isEditMode = !!editData
+  const fillExample = (example) => {
+    setFormData((previous) => {
+      const next = { ...previous }
+      for (const field of fields) {
+        const key = field.key
+        if (/^(?:id|.*_id|.*_file|file|upload)$/.test(key)) continue
+        if (Object.prototype.hasOwnProperty.call(example.data, key)) {
+          next[key] = example.data[key]
+        } else if (field.type === 'select') {
+          next[key] = field.options?.[0]?.value ?? ''
+        } else if (field.type === 'number') {
+          next[key] = field.min ?? 1
+        } else if (/^ai_|polished_quote$/.test(key)) {
+          const source = example.data.original_text || example.data.original_review || example.data.original_transcript || example.data.original_quote || example.data.content || ''
+          next[key] = source ? `Draft example — review before saving: ${source}` : `Draft example for ${example.label}; review before saving.`
+        } else if (!/url|image|photo|video|file|upload/i.test(key)) {
+          next[key] = `Example ${field.label.toLowerCase()} for ${example.label}; review before saving.`
+        }
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     if (editData) {
@@ -144,7 +166,7 @@ function NewItemModal({ isOpen, onClose, title, fields, onSubmit, onAiGenerate, 
               </div>
               <div className="flex flex-wrap gap-2">
                 {exampleData.map((example, index) => (
-                  <button key={index} type="button" onClick={() => setFormData(example.data)}
+                  <button key={index} type="button" onClick={() => fillExample(example)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all duration-150">
                     <span>{example.icon || ''}</span>
                     {example.label}
@@ -181,7 +203,7 @@ function NewItemModal({ isOpen, onClose, title, fields, onSubmit, onAiGenerate, 
           {!showAiResult && (
           <form id="newItemForm" onSubmit={handleSubmit} className="space-y-4">
             {fields.map((field) => {
-              const fieldValue = formData[field.key] || ''
+              const fieldValue = formData[field.key] ?? ''
               const fieldError = fieldErrors[field.key]
               return (
               <div key={field.key}>

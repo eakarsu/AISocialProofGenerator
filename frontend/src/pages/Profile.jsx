@@ -4,7 +4,7 @@ import { getPasswordStrengthLevel } from '../utils/validation'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function Profile() {
   const { user } = useAuth()

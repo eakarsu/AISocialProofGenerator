@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Code, Eye, Copy, CheckCircle, ExternalLink } from 'lucide-react'
 
-const API_BASE = 'http://localhost:5001'
+const API_BASE = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '').replace(/\/api$/, '');
 
 function getHeaders() {
   const token = localStorage.getItem('token')

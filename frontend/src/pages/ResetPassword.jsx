@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { getPasswordStrengthLevel } from '../utils/validation'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function ResetPassword() {
   const [searchParams] = useSearchParams()

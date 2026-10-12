@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:5001/api'
+const API_URL = '/api'
 
 function ForgotPassword() {
   const [email, setEmail] = useState('')
